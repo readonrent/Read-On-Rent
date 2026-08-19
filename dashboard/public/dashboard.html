@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Readon Rent — Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0A0E1F;
+    --panel:#131A34;
+    --panel-raised:#1A2244;
+    --line:#2E3A66;
+    --line-soft:#1C2547;
+    --paper:#F1F3FA;
+    --paper-dim:#9AA4C4;
+    --teal:#34E7B8;
+    --amber:#FBBF44;
+    --coral:#FB7185;
+    --violet:#8B7CF6;
+    --violet2:#6366F1;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+    color-scheme: dark;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:
+      radial-gradient(720px 480px at -5% -10%, rgba(139,124,246,0.16), transparent 60%),
+      radial-gradient(640px 460px at 105% 0%, rgba(52,231,184,0.10), transparent 55%),
+      radial-gradient(900px 700px at 50% 120%, rgba(99,102,241,0.10), transparent 60%),
+      var(--ink);
+    background-attachment:fixed;
+    color:var(--paper);
+    font-family:var(--font-body);
+    display:flex;
+    min-height:100vh;
+  }
+  ::selection{background:var(--teal);color:var(--ink);}
+  a{color:inherit;}
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:250px; flex-shrink:0;
+    background:linear-gradient(180deg, rgba(19,26,52,0.92), rgba(15,21,42,0.96));
+    backdrop-filter:blur(14px);
+    border-right:1px solid var(--line);
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+    box-shadow: 6px 0 30px rgba(0,0,0,0.25);
+  }
+  .brand{ padding:26px 22px 20px; border-bottom:1px solid var(--line); }
+  .brand .mark{ font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:var(--teal); margin-bottom:6px; }
+  .brand h1{
+    font-family:var(--font-display); font-size:21px; font-weight:700; letter-spacing:-0.02em;
+    background:linear-gradient(120deg, var(--paper) 20%, var(--violet) 65%, var(--teal) 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  .ruler{ flex:1; padding:18px 0; overflow-y:auto; position:relative; }
+  .ruler::before{ content:""; position:absolute; left:22px; top:0; bottom:0; width:1px; background:var(--line); }
+  .nav-item{
+    position:relative; display:flex; align-items:center; gap:14px;
+    padding:13px 22px 13px 14px; cursor:pointer; border-left:2px solid transparent;
+    transition:background .18s, border-color .18s;
+  }
+  .nav-item .tick{ width:16px; height:1px; background:var(--line); flex-shrink:0; position:relative; z-index:1; }
+  .nav-item .idx{ font-family:var(--font-mono); font-size:10px; color:var(--paper-dim); width:20px; flex-shrink:0; }
+  .nav-item .label{ font-family:var(--font-body); font-size:13.5px; font-weight:500; color:var(--paper-dim); flex:1; }
+  .nav-item .count{
+    font-family:var(--font-mono); font-size:11px; color:var(--paper-dim);
+    background:var(--panel-raised); border:1px solid var(--line); border-radius:20px; padding:1px 8px;
+  }
+  .nav-item:hover{background:rgba(139,124,246,0.08);}
+  .nav-item:hover .label{color:var(--paper);}
+  .nav-item.active{
+    background:linear-gradient(90deg, rgba(139,124,246,0.16), rgba(52,231,184,0.05));
+    border-left:2px solid var(--violet);
+  }
+  .nav-item.active .label{color:var(--paper);font-weight:600;}
+  .nav-item.active .tick{background:var(--violet);}
+  .nav-item.active .idx{color:var(--violet);}
+  .nav-item.active .count{color:var(--teal);border-color:var(--teal);}
+  .nav-divider{ margin:8px 22px 8px 40px; border-top:1px dashed var(--line); }
+
+  .sidebar-foot{
+    padding:16px 22px; border-top:1px solid var(--line);
+    font-family:var(--font-mono); font-size:10.5px; color:var(--paper-dim);
+    display:flex; justify-content:space-between; align-items:center; gap:8px;
+  }
+  .sidebar-foot .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--teal);
+    display:inline-block;margin-right:6px; box-shadow:0 0 6px var(--teal);
+  }
+  .auth-btn{
+    font-family:var(--font-mono); font-size:10.5px; letter-spacing:.5px;
+    background:transparent; border:1px solid var(--line); color:var(--paper-dim);
+    border-radius:6px; padding:5px 10px; cursor:pointer; transition:.15s;
+  }
+  .auth-btn:hover{border-color:var(--teal);color:var(--teal);}
+  .auth-btn.logout:hover{border-color:var(--coral);color:var(--coral);}
+  .sidebar-tools{ display:flex; gap:8px; padding:0 22px 14px; }
+  .sidebar-tools .auth-btn{ flex:1; text-align:center; }
+
+  .search-row{ margin-bottom:16px; }
+  .search-row input{
+    width:100%; background:var(--panel-raised); border:1px solid var(--line); border-radius:8px;
+    padding:11px 14px; color:var(--paper); font-family:var(--font-body); font-size:13px;
+  }
+  .search-row input:focus{outline:none;border-color:var(--violet);}
+  .search-row input::placeholder{color:var(--paper-dim);}
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1;min-width:0;padding:36px 44px 60px;}
+  .top-row{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-bottom:28px; border-bottom:1px solid var(--line); padding-bottom:20px; gap:20px; flex-wrap:wrap;
+  }
+  .top-row .eyebrow{ font-family:var(--font-mono); font-size:11px; letter-spacing:2px; color:var(--teal); margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+  .lock-pill{
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:1px; color:var(--amber);
+    border:1px solid rgba(251,191,68,.4); padding:2px 8px; border-radius:20px;
+    box-shadow:0 0 10px rgba(251,191,68,.15);
+  }
+  .top-row h2{
+    font-family:var(--font-display); font-size:32px; font-weight:700; letter-spacing:-0.02em;
+    background:linear-gradient(120deg, var(--paper), var(--violet) 90%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .top-row .sub{ font-size:13px; color:var(--paper-dim); margin-top:6px; max-width:540px; }
+  .stat-strip{display:flex;gap:26px;}
+  .stat{text-align:right;}
+  .stat .n{font-family:var(--font-display);font-size:27px;font-weight:700;}
+  .stat .l{font-family:var(--font-mono);font-size:10px;color:var(--paper-dim);letter-spacing:1px;}
+  .stat.done .n{
+    background:linear-gradient(120deg, var(--teal), #6EE7B7);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  /* add bar */
+  .add-bar{
+    display:flex; gap:10px; margin-bottom:26px;
+    background:linear-gradient(180deg, rgba(26,34,68,0.85), rgba(19,26,52,0.85));
+    border:1px solid var(--line); border-radius:12px; padding:12px;
+    flex-wrap:wrap; align-items:center;
+    box-shadow:0 8px 24px rgba(0,0,0,0.18);
+  }
+  .add-bar input, .add-bar select, .add-bar textarea{
+    flex:1; min-width:130px;
+    background:var(--panel-raised); border:1px solid var(--line); border-radius:6px;
+    padding:11px 13px; color:var(--paper); font-family:var(--font-body); font-size:13.5px;
+  }
+  .add-bar textarea{resize:vertical;min-height:42px;font-family:var(--font-body);}
+  .add-bar input[type="date"], .add-bar input[type="time"]{ flex:0 0 168px; font-family:var(--font-mono); font-size:12.5px; padding:10px 12px; }
+  .add-bar select{ flex:0 0 160px; font-family:var(--font-mono); font-size:12px; }
+  .add-bar input::placeholder, .add-bar textarea::placeholder{color:var(--paper-dim);}
+  .add-bar input:focus, .add-bar select:focus, .add-bar textarea:focus{outline:none;border-color:var(--teal);}
+  .add-bar button{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:1px;
+    background:linear-gradient(120deg, var(--violet), var(--teal));
+    color:var(--ink); border:none; border-radius:8px;
+    padding:0 20px; height:42px; font-weight:700; cursor:pointer; transition:filter .15s, transform .15s;
+    box-shadow:0 6px 18px rgba(139,124,246,0.25);
+  }
+  .add-bar button:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .file-label{
+    flex:0 0 auto; display:flex; align-items:center; gap:8px; cursor:pointer;
+    background:var(--panel-raised); border:1px solid var(--line); border-radius:8px;
+    padding:11px 14px; font-family:var(--font-mono); font-size:11.5px; color:var(--paper-dim);
+    transition:border-color .15s, color .15s;
+  }
+  .file-label:hover{border-color:var(--teal);color:var(--teal);}
+  .file-label input{display:none;}
+  .locked-note{
+    font-family:var(--font-mono); font-size:12px; color:var(--paper-dim);
+    border:1px dashed var(--line); border-radius:12px; padding:16px; margin-bottom:26px;
+    display:flex; align-items:center; gap:10px;
+    background:rgba(139,124,246,0.04);
+  }
+  .locked-note button{
+    font-family:var(--font-mono); font-size:11px;
+    background:linear-gradient(120deg, var(--violet), var(--teal)); color:var(--ink);
+    border:none; border-radius:8px; padding:8px 14px; cursor:pointer; font-weight:700;
+  }
+
+  /* card grid */
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:16px; }
+  .card{
+    background:linear-gradient(180deg, rgba(26,34,68,0.7), rgba(19,26,52,0.7));
+    border:1px solid var(--line); border-radius:12px;
+    padding:18px 18px 16px; position:relative; transition:border-color .18s, transform .18s, box-shadow .18s;
+  }
+  .card:hover{border-color:rgba(139,124,246,0.45);transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,0.28), 0 0 0 1px rgba(139,124,246,0.08);}
+  .card.is-done{border-color:rgba(52,231,184,0.4);background:linear-gradient(180deg, rgba(52,231,184,0.07), rgba(19,26,52,0.7) 45%);}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .card h3{ font-family:var(--font-display); font-size:15.5px; font-weight:600; line-height:1.3; }
+  .status-dot{ width:9px;height:9px;border-radius:50%; background:var(--amber); flex-shrink:0; margin-top:5px; box-shadow:0 0 6px rgba(245,166,35,.6); }
+  .status-dot.done{background:var(--teal);box-shadow:0 0 6px rgba(94,234,212,.7);}
+  .card p{ font-size:12.5px; color:var(--paper-dim); line-height:1.5; margin-bottom:14px; min-height:18px; }
+  .card-foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .meta{ font-family:var(--font-mono); font-size:10.5px; color:var(--paper-dim); }
+  .status-pill{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.5px; padding:3px 9px;
+    border-radius:20px; border:1px solid rgba(251,191,68,.4); color:var(--amber);
+  }
+  .status-pill.done{border-color:rgba(52,231,184,.5);color:var(--teal);}
+  .type-pill{
+    font-family:var(--font-mono); font-size:10px; letter-spacing:.5px; padding:3px 9px;
+    border-radius:20px; border:1px solid var(--line); color:var(--paper-dim);
+  }
+  .card-actions{display:flex;gap:8px;margin-top:14px;}
+  .done-btn{
+    flex:1; font-family:var(--font-mono); font-size:11px; letter-spacing:.5px; padding:9px 0;
+    border-radius:8px; border:1px solid var(--teal); background:transparent; color:var(--teal);
+    cursor:pointer; font-weight:600; transition:background .18s, color .18s, box-shadow .18s;
+  }
+  .done-btn:hover{background:linear-gradient(120deg, var(--teal), #6EE7B7);color:var(--ink);box-shadow:0 6px 16px rgba(52,231,184,0.25);}
+  .done-btn.undo{border-color:var(--amber);color:var(--amber);}
+  .done-btn.undo:hover{background:linear-gradient(120deg, var(--amber), #FCD34D);color:var(--ink);box-shadow:0 6px 16px rgba(251,191,68,0.25);}
+  .del-btn{
+    width:34px; border-radius:8px; border:1px solid var(--line); background:transparent;
+    color:var(--paper-dim); cursor:pointer; font-size:13px; transition:border-color .15s, color .15s;
+  }
+  .del-btn:hover{border-color:var(--coral);color:var(--coral);}
+
+  .empty{
+    grid-column:1/-1; text-align:center; padding:70px 20px;
+    border:1px dashed var(--line); border-radius:10px; color:var(--paper-dim);
+    font-family:var(--font-mono); font-size:12.5px;
+  }
+
+  .section{display:none;}
+  .section.active{display:block;}
+
+  /* ---------- OVERVIEW ---------- */
+  .ov-grid{ display:grid; grid-template-columns: 300px 1fr; gap:20px; margin-bottom:20px; }
+  .ov-panel{
+    background:linear-gradient(180deg, rgba(26,34,68,0.75), rgba(19,26,52,0.75));
+    border:1px solid var(--line); border-radius:14px; padding:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  }
+  .ov-panel h4{ font-family:var(--font-mono); font-size:11px; letter-spacing:1.5px; color:var(--paper-dim); margin-bottom:18px; }
+  .donut-wrap{ display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .donut{ width:180px;height:180px;border-radius:50%; display:flex;align-items:center;justify-content:center; position:relative; }
+  .donut .hole{ width:128px;height:128px;border-radius:50%;background:var(--panel); display:flex;flex-direction:column;align-items:center;justify-content:center; }
+  .donut .hole .pct{ font-family:var(--font-display); font-size:28px; font-weight:700; color:var(--teal); }
+  .donut .hole .lbl{ font-family:var(--font-mono); font-size:9.5px; color:var(--paper-dim); letter-spacing:1px; margin-top:2px; }
+  .legend{ display:flex; gap:18px; font-family:var(--font-mono); font-size:11px; color:var(--paper-dim); }
+  .legend span{display:flex;align-items:center;gap:6px;}
+  .legend i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .bar-rows{ display:flex; flex-direction:column; gap:14px; }
+  .bar-row{ display:grid; grid-template-columns: 130px 1fr 60px; align-items:center; gap:12px; }
+  .bar-row .rlabel{ font-family:var(--font-body); font-size:12.5px; color:var(--paper); }
+  .bar-track{ height:10px; background:var(--panel-raised); border-radius:20px; overflow:hidden; border:1px solid var(--line); }
+  .bar-fill{ height:100%; background:linear-gradient(90deg, var(--teal), #34D3B8); border-radius:20px; transition:width .4s; }
+  .bar-row .rval{ font-family:var(--font-mono); font-size:11px; color:var(--paper-dim); text-align:right; }
+  .recent-list{ display:flex; flex-direction:column; gap:10px; margin-top:6px; }
+  .recent-item{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--panel-raised); border:1px solid var(--line); border-radius:8px; padding:12px 14px;
+  }
+  .recent-item .rt{ font-size:13px; font-weight:500; }
+  .recent-item .rb{ font-family:var(--font-mono); font-size:10px; color:var(--teal); }
+
+  /* ---------- RETRO PHASES ---------- */
+  .phase-block{ margin-bottom:10px; }
+  .phase-tag{
+    font-family:var(--font-mono); font-size:9.5px; letter-spacing:1px; color:var(--teal);
+    display:block; margin-bottom:3px;
+  }
+  .phase-tag.p2{color:var(--amber);}
+  .phase-tag.p3{color:var(--paper-dim);}
+  .phase-text{font-size:12.5px;color:var(--paper);line-height:1.5;}
+
+  /* ---------- TESTING ---------- */
+  .card-img{ width:100%; height:130px; object-fit:cover; border-radius:8px; margin-bottom:12px; border:1px solid var(--line); }
+
+  /* ---------- TEAM ---------- */
+  .project-banner{
+    background:linear-gradient(120deg, rgba(139,124,246,0.12), rgba(52,231,184,0.06));
+    border:1px solid var(--line); border-radius:14px;
+    padding:20px 22px; margin-bottom:22px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .project-banner .pl{ font-family:var(--font-mono); font-size:10.5px; color:var(--paper-dim); letter-spacing:1px; margin-bottom:4px; }
+  .project-banner h3{
+    font-family:var(--font-display); font-size:21px; font-weight:700;
+    background:linear-gradient(120deg, var(--teal), var(--violet));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .member-avatar{
+    width:38px;height:38px;border-radius:50%;
+    background:linear-gradient(135deg, rgba(139,124,246,0.25), rgba(52,231,184,0.2));
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center; font-family:var(--font-display); font-weight:700; color:var(--teal); font-size:14px;
+  }
+  .member-card{display:flex;align-items:center;gap:12px;}
+  .member-info h3{font-size:14.5px;}
+  .member-info p{margin-bottom:0;font-size:11.5px;}
+
+  /* ---------- TEAM PROGRESS ---------- */
+  .tp-row{
+    display:grid; grid-template-columns:44px 140px 1fr 90px; align-items:center; gap:14px;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-bottom:12px;
+  }
+  .tp-row input[type="range"]{ width:100%; accent-color:var(--teal); }
+  .tp-name{font-size:13px;font-weight:500;}
+  .tp-role{font-family:var(--font-mono);font-size:10px;color:var(--paper-dim);}
+  .tp-val{font-family:var(--font-mono);font-size:13px;color:var(--teal);text-align:right;}
+
+  /* ---------- LOGIN MODAL ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(5,12,22,.75); backdrop-filter:blur(4px);
+    display:none; align-items:center; justify-content:center; z-index:100;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    width:340px;
+    background:linear-gradient(180deg, rgba(26,34,68,0.96), rgba(15,21,42,0.98));
+    border:1px solid var(--line); border-radius:16px; padding:28px;
+    position:relative;
+    box-shadow:0 24px 60px rgba(0,0,0,0.45), 0 0 0 1px rgba(139,124,246,0.08);
+  }
+  .modal-box .mark{ font-family:var(--font-mono); font-size:10.5px; letter-spacing:2px; color:var(--teal); margin-bottom:8px; }
+  .modal-box h3{ font-family:var(--font-display); font-size:19px; margin-bottom:6px; }
+  .modal-box .hint{ font-size:11.5px; color:var(--paper-dim); margin-bottom:18px; line-height:1.5; }
+  .modal-box input{
+    width:100%; background:var(--panel-raised); border:1px solid var(--line); border-radius:6px;
+    padding:11px 13px; color:var(--paper); font-family:var(--font-body); font-size:13.5px; margin-bottom:10px;
+  }
+  .modal-box input:focus{outline:none;border-color:var(--teal);}
+  .modal-box .err{ font-family:var(--font-mono); font-size:11px; color:var(--coral); margin-bottom:10px; display:none; }
+  .modal-box .err.show{display:block;}
+  .modal-actions{display:flex;gap:8px;margin-top:6px;}
+  .modal-actions button{
+    flex:1; font-family:var(--font-mono); font-size:12px; letter-spacing:.5px; padding:11px 0;
+    border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--paper-dim); cursor:pointer;
+  }
+  .modal-actions .primary{ background:linear-gradient(120deg, var(--violet), var(--teal)); color:var(--ink); border-color:transparent; font-weight:700; }
+  .modal-close{ position:absolute; top:14px; right:16px; background:none; border:none; color:var(--paper-dim); cursor:pointer; font-size:16px; }
+
+  @media(max-width:820px){
+    body{flex-direction:column;}
+    .sidebar{width:100%;height:auto;position:relative;flex-direction:row;overflow-x:auto;}
+    .ruler{display:flex;padding:0;}
+    .ruler::before{display:none;}
+    .nav-divider{display:none;}
+    .brand{display:none;}
+    .sidebar-foot{display:none;}
+    .main{padding:24px;}
+    .top-row{flex-direction:column;align-items:flex-start;gap:14px;}
+    .stat-strip{align-self:stretch;justify-content:space-between;}
+    .ov-grid{grid-template-columns:1fr;}
+    .tp-row{grid-template-columns:36px 1fr; row-gap:8px;}
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="mark">SPRINT CONSOLE</div>
+    <h1>Readon Rent</h1>
+  </div>
+  <nav class="ruler" id="ruler"></nav>
+  <div class="sidebar-tools">
+    <button class="auth-btn" onclick="exportData()">⬇ Export</button>
+    <label class="auth-btn" style="cursor:pointer;">⬆ Import<input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)"></label>
+  </div>
+  <div class="sidebar-foot">
+    <span><span class="dot"></span><span id="footDate"></span></span>
+    <span id="authArea"></span>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="top-row">
+    <div>
+      <div class="eyebrow" id="crumb">// BOARD <span class="lock-pill" id="lockPill" style="display:none;">🔒 VIEW ONLY</span></div>
+      <h2 id="boardTitle">Overview</h2>
+      <p class="sub" id="boardSub">Progress across every board, at a glance.</p>
+    </div>
+    <div class="stat-strip" id="statStrip">
+      <div class="stat"><div class="n" id="statTotal">0</div><div class="l">TOTAL</div></div>
+      <div class="stat done"><div class="n" id="statDone">0</div><div class="l">DONE</div></div>
+    </div>
+  </div>
+
+  <div id="lockedNote" class="locked-note" style="display:none;">
+    🔒 You're viewing in read-only mode. <button onclick="openLogin()">Login to edit</button>
+  </div>
+
+  <div class="search-row" id="searchRow" style="display:none;">
+    <input type="text" id="searchInput" placeholder="Search this board…" oninput="onSearchInput(this.value)">
+  </div>
+
+  <div class="add-bar" id="addBar"></div>
+
+  <div id="sections"></div>
+</main>
+
+<div class="modal-overlay" id="loginOverlay">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeLogin()">✕</button>
+    <div class="mark">ACCESS</div>
+    <h3 id="loginHeading">Login required</h3>
+    <p class="hint" id="loginHint">Use the shared team login. Credentials are set on the server (ask whoever deployed this dashboard if you don't have them).</p>
+    <input type="text" id="loginUser" placeholder="Username">
+    <input type="password" id="loginPass" placeholder="Password">
+    <div class="err" id="loginErr">Incorrect username or password.</div>
+    <div class="modal-actions">
+      <button onclick="closeLogin()">Cancel</button>
+      <button class="primary" onclick="attemptLogin()">Login</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const boards = {
+  overview:       { label:"Overview",          idx:"00", sub:"Progress across every board, at a glance.", kind:"overview" },
+  meetings:       { label:"Meetings",           idx:"01", sub:"Scheduled ceremonies — standups, reviews, syncs.", kind:"meetings" },
+  backlog:        { label:"Backlog",            idx:"02", sub:"Prioritized work waiting to enter a sprint.", kind:"generic" },
+  sprints:        { label:"Sprints",            idx:"03", sub:"Active sprint cycles and their progress.", kind:"generic" },
+  dailyscrum:     { label:"Daily Scrum",        idx:"04", sub:"Standup notes — blockers, plans, updates.", kind:"generic" },
+  sprintreview:   { label:"Sprint Review",      idx:"05", sub:"Demo notes and stakeholder feedback per sprint.", kind:"generic" },
+  retrospective:  { label:"Retrospective",      idx:"06", sub:"Problem → Solution → target sprint, per item.", kind:"retro" },
+  testing:        { label:"Testing Progress",   idx:"07", sub:"Open issues found in testing, with evidence.", kind:"testing" },
+  team:           { label:"Team",               idx:"08", sub:"Project name and the people working it.", kind:"team" },
+  teamprogress:   { label:"Team Progress",      idx:"09", sub:"Manual progress read-out per team member.", kind:"teamprogress" }
+};
+const progressBoards = ["meetings","backlog","sprints","dailyscrum","sprintreview","retrospective","testing"];
+
+function emptyData(){
+  const d = {};
+  progressBoards.forEach(k => { d[k] = []; });
+  d.team = { projectName:"", members:[] };
+  d.teamProgressMap = {};
+  return d;
+}
+
+let data = emptyData();
+let activeTab = "overview";
+let sessionUser = null;
+let searchQuery = "";
+let saving = false;
+
+function normalizeData(parsed){
+  const d = parsed && typeof parsed === "object" ? parsed : {};
+  progressBoards.forEach(k => { if(!d[k]) d[k] = []; });
+  if(!d.team) d.team = { projectName:"", members:[] };
+  if(!d.teamProgressMap) d.teamProgressMap = {};
+  return d;
+}
+
+async function fetchData(){
+  const res = await fetch("/api/data");
+  if(!res.ok) throw new Error("Failed to load dashboard data from the server.");
+  data = normalizeData(await res.json());
+}
+
+async function fetchSession(){
+  const res = await fetch("/api/session");
+  const body = await res.json();
+  sessionUser = body.loggedIn ? body.username : null;
+}
+
+/* save() pushes the full data blob to the server. Callers already mutate `data`
+   in place and re-render optimistically, so this runs in the background and
+   only interrupts the user with an alert if the server write actually fails
+   (e.g. their session expired), since that means their change wasn't persisted
+   for the rest of the team. */
+async function save(){
+  saving = true;
+  try{
+    const res = await fetch("/api/data", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
+    if(!res.ok){
+      const body = await res.json().catch(()=>({}));
+      if(res.status === 401){
+        sessionUser = null;
+        alert("Your session expired, so that last change wasn't saved. Please log in again and retry.");
+        renderAll();
+      } else {
+        alert("Couldn't save to the server: " + (body.error || res.statusText));
+      }
+    }
+  } catch(err){
+    alert("Couldn't reach the server to save your change. Check your connection and try again.");
+  } finally {
+    saving = false;
+  }
+}
+
+function isLoggedIn(){ return !!sessionUser; }
+
+/* ---------- EXPORT / IMPORT (backup) ---------- */
+function exportData(){
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "readon-rent-backup-" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importData(evt){
+  if(!requireLogin()){ evt.target.value = ""; return; }
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try{
+      const parsed = JSON.parse(e.target.result);
+      progressBoards.forEach(k => { if(!parsed[k]) parsed[k] = []; });
+      if(!parsed.team) parsed.team = { projectName:"", members:[] };
+      if(!parsed.teamProgressMap) parsed.teamProgressMap = {};
+      data = parsed;
+      save();
+      renderAll();
+      alert("Backup restored.");
+    }catch(err){
+      alert("Couldn't read that file — make sure it's a backup exported from this dashboard.");
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = "";
+}
+
+/* ---------- SEARCH ---------- */
+function onSearchInput(val){ searchQuery = val.trim().toLowerCase(); renderSections(); }
+function matchesSearch(text){
+  if(!searchQuery) return true;
+  return (text||"").toLowerCase().includes(searchQuery);
+}
+
+/* ---------- AUTH ---------- */
+function openLogin(){
+  document.getElementById("loginErr").classList.remove("show");
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+  document.getElementById("loginOverlay").classList.add("show");
+}
+function closeLogin(){ document.getElementById("loginOverlay").classList.remove("show"); }
+async function attemptLogin(){
+  const u = document.getElementById("loginUser").value.trim();
+  const p = document.getElementById("loginPass").value;
+  const loginBtn = document.querySelector(".modal-actions .primary");
+  if(loginBtn){ loginBtn.disabled = true; }
+  try{
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username:u, password:p })
+    });
+    const body = await res.json().catch(()=>({}));
+    if(res.ok){
+      sessionUser = body.username;
+      closeLogin();
+      await fetchData();
+      renderAll();
+    } else {
+      document.getElementById("loginErr").textContent = body.error || "Incorrect username or password.";
+      document.getElementById("loginErr").classList.add("show");
+    }
+  } catch(err){
+    document.getElementById("loginErr").textContent = "Couldn't reach the server. Check your connection.";
+    document.getElementById("loginErr").classList.add("show");
+  } finally {
+    if(loginBtn){ loginBtn.disabled = false; }
+  }
+}
+async function logout(){
+  sessionUser = null;
+  try{ await fetch("/api/logout", { method:"POST" }); } catch(err){ /* proceed anyway */ }
+  renderAll();
+}
+function requireLogin(){
+  if(!isLoggedIn()){ openLogin(); return false; }
+  return true;
+}
+function renderAuthArea(){
+  const el = document.getElementById("authArea");
+  if(isLoggedIn()){
+    el.innerHTML = `<button class="auth-btn logout" onclick="logout()">${sessionUser} · Logout</button>`;
+  } else {
+    el.innerHTML = `<button class="auth-btn" onclick="openLogin()">Login</button>`;
+  }
+  document.getElementById("lockPill").style.display = isLoggedIn() ? "none" : "inline-block";
+  document.getElementById("lockedNote").style.display = isLoggedIn() ? "none" : "flex";
+}
+
+/* ---------- NAV ---------- */
+function renderRuler(){
+  const nav = document.getElementById("ruler");
+  nav.innerHTML = "";
+  Object.keys(boards).forEach((key,i)=>{
+    const b = boards[key];
+    if(i===2){ const div=document.createElement("div"); div.className="nav-divider"; nav.appendChild(div); }
+    const item = document.createElement("div");
+    item.className = "nav-item" + (key===activeTab ? " active" : "");
+    item.onclick = () => { activeTab = key; searchQuery=""; renderAll(); };
+    let countHtml = "";
+    if(b.kind==="generic" || b.kind==="meetings" || b.kind==="retro" || b.kind==="testing"){
+      countHtml = `<span class="count">${data[key].length}</span>`;
+    } else if(b.kind==="team"){
+      countHtml = `<span class="count">${data.team.members.length}</span>`;
+    }
+    item.innerHTML = `
+      <span class="idx">${b.idx}</span>
+      <span class="tick"></span>
+      <span class="label">${b.label}</span>
+      ${countHtml}
+    `;
+    nav.appendChild(item);
+  });
+}
+
+function renderTop(){
+  const b = boards[activeTab];
+  document.getElementById("crumb").childNodes[0].textContent = "// BOARD " + b.idx + " ";
+  document.getElementById("boardTitle").textContent = b.label;
+  document.getElementById("boardSub").textContent = b.sub;
+
+  const statStrip = document.getElementById("statStrip");
+  if(b.kind==="overview"){
+    let total=0, done=0;
+    progressBoards.forEach(k=>{ total+=data[k].length; done+=data[k].filter(i=>i.done).length; });
+    statStrip.innerHTML = `
+      <div class="stat"><div class="n">${total}</div><div class="l">ALL ITEMS</div></div>
+      <div class="stat done"><div class="n">${done}</div><div class="l">COMPLETED</div></div>
+    `;
+  } else if(b.kind==="team"){
+    statStrip.innerHTML = `<div class="stat"><div class="n">${data.team.members.length}</div><div class="l">MEMBERS</div></div>`;
+  } else if(b.kind==="teamprogress"){
+    const vals = data.team.members.map(m => data.teamProgressMap[m.id]||0);
+    const avg = vals.length ? Math.round(vals.reduce((a,c)=>a+c,0)/vals.length) : 0;
+    statStrip.innerHTML = `<div class="stat done"><div class="n">${avg}%</div><div class="l">AVG PROGRESS</div></div>`;
+  } else {
+    const items = data[activeTab];
+    statStrip.innerHTML = `
+      <div class="stat"><div class="n">${items.length}</div><div class="l">TOTAL</div></div>
+      <div class="stat done"><div class="n">${items.filter(i=>i.done).length}</div><div class="l">DONE</div></div>
+    `;
+  }
+}
+
+/* ---------- ADD BAR ---------- */
+function renderAddBar(){
+  const bar = document.getElementById("addBar");
+  const kind = boards[activeTab].kind;
+  const locked = !isLoggedIn();
+
+  const searchRow = document.getElementById("searchRow");
+  const searchableKinds = ["generic","meetings","retro","testing"];
+  if(searchableKinds.includes(kind)){
+    searchRow.style.display = "block";
+    document.getElementById("searchInput").value = searchQuery;
+  } else {
+    searchRow.style.display = "none";
+  }
+
+  if(kind==="overview" || kind==="teamprogress"){ bar.style.display = "none"; return; }
+  if(locked){ bar.style.display = "none"; return; }
+  bar.style.display = "flex";
+
+  if(kind==="meetings"){
+    bar.innerHTML = `
+      <input type="text" id="titleInput" placeholder="Meeting title…">
+      <select id="typeInput">
+        <option value="Daily Scrum">Daily Scrum</option>
+        <option value="Sprint Review">Sprint Review</option>
+        <option value="Retrospective">Retrospective</option>
+        <option value="Sprint Planning">Sprint Planning</option>
+        <option value="Other">Other</option>
+      </select>
+      <input type="date" id="dateInput">
+      <input type="time" id="timeInput">
+      <button onclick="addItem()">+ SCHEDULE</button>
+    `;
+  } else if(kind==="generic"){
+    bar.innerHTML = `
+      <input type="text" id="titleInput" placeholder="Item title…">
+      <input type="text" id="descInput" placeholder="Description / details…">
+      <input type="date" id="dueInput" title="Target date">
+      <button onclick="addItem()">+ ADD ITEM</button>
+    `;
+  } else if(kind==="retro"){
+    bar.innerHTML = `
+      <input type="text" id="problemInput" placeholder="Problem…">
+      <input type="text" id="solutionInput" placeholder="Proposed solution…">
+      <input type="text" id="sprintInput" placeholder="Target sprint (e.g. Sprint 12)" style="flex:0 0 200px;">
+      <button onclick="addItem()">+ ADD</button>
+    `;
+  } else if(kind==="testing"){
+    bar.innerHTML = `
+      <input type="text" id="titleInput" placeholder="Issue title…">
+      <input type="text" id="descInput" placeholder="What's broken?">
+      <label class="file-label">📎 Attach image<input type="file" id="imgInput" accept="image/*"></label>
+      <button onclick="addItem()">+ LOG ISSUE</button>
+    `;
+  } else if(kind==="team"){
+    bar.innerHTML = `
+      <input type="text" id="projectNameInput" placeholder="Project name…" value="${escapeAttr(data.team.projectName)}" style="flex:0 0 220px;">
+      <button onclick="saveProjectName()" style="flex:0 0 auto;">SAVE PROJECT</button>
+      <input type="text" id="memberNameInput" placeholder="Member name…">
+      <input type="text" id="memberRoleInput" placeholder="Role / focus…">
+      <button onclick="addItem()">+ ADD MEMBER</button>
+    `;
+  }
+}
+
+function escapeAttr(str){ return (str||"").replace(/"/g,"&quot;"); }
+
+/* ---------- SECTIONS ---------- */
+function renderSections(){
+  const container = document.getElementById("sections");
+  container.innerHTML = "";
+  Object.keys(boards).forEach(key=>{
+    const b = boards[key];
+    const section = document.createElement("div");
+    section.className = "section" + (key===activeTab ? " active" : "");
+    if(b.kind==="overview") section.appendChild(buildOverview());
+    else if(b.kind==="meetings") section.appendChild(buildMeetings());
+    else if(b.kind==="retro") section.appendChild(buildRetro());
+    else if(b.kind==="testing") section.appendChild(buildTesting());
+    else if(b.kind==="team") section.appendChild(buildTeam());
+    else if(b.kind==="teamprogress") section.appendChild(buildTeamProgress());
+    else section.appendChild(buildGeneric(key));
+    container.appendChild(section);
+  });
+}
+
+function buildOverview(){
+  const wrap = document.createElement("div");
+  let total=0, done=0;
+  progressBoards.forEach(k=>{ total+=data[k].length; done+=data[k].filter(i=>i.done).length; });
+  const pct = total===0 ? 0 : Math.round((done/total)*100);
+
+  const ovGrid = document.createElement("div");
+  ovGrid.className = "ov-grid";
+
+  const donutPanel = document.createElement("div");
+  donutPanel.className = "ov-panel";
+  donutPanel.innerHTML = `
+    <h4>OVERALL COMPLETION</h4>
+    <div class="donut-wrap">
+      <div class="donut" style="background:conic-gradient(var(--teal) ${pct*3.6}deg, var(--panel-raised) 0deg)">
+        <div class="hole"><div class="pct">${pct}%</div><div class="lbl">COMPLETE</div></div>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--teal)"></i>${done} done</span>
+        <span><i style="background:var(--panel-raised);border:1px solid var(--line)"></i>${total-done} open</span>
+      </div>
+    </div>
+  `;
+
+  const barsPanel = document.createElement("div");
+  barsPanel.className = "ov-panel";
+  let barsHtml = `<h4>PROGRESS BY BOARD</h4><div class="bar-rows">`;
+  progressBoards.forEach(k=>{
+    const items = data[k];
+    const t = items.length, d = items.filter(i=>i.done).length;
+    const p = t===0 ? 0 : Math.round((d/t)*100);
+    barsHtml += `
+      <div class="bar-row">
+        <div class="rlabel">${boards[k].label}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${p}%"></div></div>
+        <div class="rval">${d}/${t}</div>
+      </div>`;
+  });
+  barsHtml += `</div>`;
+  barsPanel.innerHTML = barsHtml;
+
+  ovGrid.appendChild(donutPanel);
+  ovGrid.appendChild(barsPanel);
+  wrap.appendChild(ovGrid);
+
+  // Burndown-style due date breakdown across generic boards
+  const genericKeys = ["backlog","sprints","dailyscrum","sprintreview"];
+  let overdue=0, thisWeek=0, later=0, noDue=0;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const weekOut = new Date(today.getTime() + 7*86400000);
+  genericKeys.forEach(k=>{
+    data[k].filter(i=>!i.done).forEach(i=>{
+      if(!i.due){ noDue++; return; }
+      const d = new Date(i.due + "T00:00:00");
+      if(d < today) overdue++;
+      else if(d <= weekOut) thisWeek++;
+      else later++;
+    });
+  });
+  const burndownMax = Math.max(overdue, thisWeek, later, noDue, 1);
+  const burnPanel = document.createElement("div");
+  burnPanel.className = "ov-panel";
+  burnPanel.innerHTML = `
+    <h4>OPEN WORK BY DUE DATE</h4>
+    <div class="bar-rows">
+      <div class="bar-row"><div class="rlabel" style="color:var(--coral)">Overdue</div><div class="bar-track"><div class="bar-fill" style="width:${(overdue/burndownMax)*100}%;background:linear-gradient(90deg,var(--coral),#FCA5A5)"></div></div><div class="rval">${overdue}</div></div>
+      <div class="bar-row"><div class="rlabel" style="color:var(--amber)">Due this week</div><div class="bar-track"><div class="bar-fill" style="width:${(thisWeek/burndownMax)*100}%;background:linear-gradient(90deg,var(--amber),#FCD34D)"></div></div><div class="rval">${thisWeek}</div></div>
+      <div class="bar-row"><div class="rlabel">Later</div><div class="bar-track"><div class="bar-fill" style="width:${(later/burndownMax)*100}%"></div></div><div class="rval">${later}</div></div>
+      <div class="bar-row"><div class="rlabel" style="color:var(--paper-dim)">No due date</div><div class="bar-track"><div class="bar-fill" style="width:${(noDue/burndownMax)*100}%;background:var(--line)"></div></div><div class="rval">${noDue}</div></div>
+    </div>
+  `;
+  wrap.appendChild(burnPanel);
+
+  const recentPanel = document.createElement("div");
+  recentPanel.className = "ov-panel";
+  let allDone = [];
+  progressBoards.forEach(k=>{ data[k].filter(i=>i.done).forEach(i=> allDone.push({...i, board:boards[k].label})); });
+  allDone.sort((a,b)=> Number(b.id) - Number(a.id));
+  allDone = allDone.slice(0,6);
+  let recentHtml = `<h4>RECENTLY COMPLETED</h4><div class="recent-list">`;
+  if(allDone.length===0){
+    recentHtml += `<div class="empty" style="padding:30px;">NOTHING MARKED DONE YET</div>`;
+  } else {
+    allDone.forEach(i=>{
+      recentHtml += `<div class="recent-item"><span class="rt">${escapeHtml(i.title||i.problem||"Untitled")}</span><span class="rb">${i.board.toUpperCase()}</span></div>`;
+    });
+  }
+  recentHtml += `</div>`;
+  recentPanel.innerHTML = recentHtml;
+  wrap.appendChild(recentPanel);
+  return wrap;
+}
+
+function buildGeneric(key){
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  const items = data[key].filter(i => matchesSearch(i.title) || matchesSearch(i.desc));
+  if(items.length===0){ grid.innerHTML = `<div class="empty">${searchQuery ? "NO MATCHES FOR YOUR SEARCH" : "NO ITEMS YET" + (isLoggedIn() ? " — add one above." : ". Login to add items.")}</div>`; return grid; }
+  items.forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "card" + (item.done ? " is-done" : "");
+    card.innerHTML = `
+      <div class="card-head"><h3>${escapeHtml(item.title)}</h3><span class="status-dot ${item.done?"done":""}"></span></div>
+      <p>${escapeHtml(item.desc || "No description added.")}</p>
+      <div class="card-foot">
+        <span class="meta">${item.due ? "DUE " + formatDate(item.due) : "ADDED " + item.date}${item.addedBy ? " · by " + escapeHtml(item.addedBy) : ""}</span>
+        <span class="status-pill ${item.done?"done":""}">${item.done?"DONE":"PENDING"}</span>
+      </div>
+      ${isLoggedIn() ? `
+      <div class="card-actions">
+        <button class="done-btn ${item.done?"undo":""}" onclick="toggleDone('${key}','${item.id}')">${item.done ? "↺ MARK PENDING" : "✓ MARK DONE"}</button>
+        <button class="del-btn" onclick="deleteItem('${key}','${item.id}')">✕</button>
+      </div>` : ``}
+    `;
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+function buildMeetings(){
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  const items = data.meetings.filter(i => matchesSearch(i.title) || matchesSearch(i.type));
+  if(items.length===0){ grid.innerHTML = `<div class="empty">${searchQuery ? "NO MATCHES FOR YOUR SEARCH" : "NO MEETINGS SCHEDULED" + (isLoggedIn() ? " — add one above." : ". Login to schedule.")}</div>`; return grid; }
+  items.forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "card" + (item.done ? " is-done" : "");
+    card.innerHTML = `
+      <div class="card-head"><h3>${escapeHtml(item.title)}</h3><span class="status-dot ${item.done?"done":""}"></span></div>
+      <p>${item.date ? formatDate(item.date) : "No date set"}${item.time ? " · " + item.time : ""}</p>
+      <div class="card-foot">
+        <span class="type-pill">${escapeHtml(item.type||"Other")}</span>
+        <span class="status-pill ${item.done?"done":""}">${item.done?"COMPLETED":"UPCOMING"}</span>
+      </div>
+      ${isLoggedIn() ? `
+      <div class="card-actions">
+        <button class="done-btn ${item.done?"undo":""}" onclick="toggleDone('meetings','${item.id}')">${item.done ? "↺ MARK UPCOMING" : "✓ MARK COMPLETED"}</button>
+        <button class="del-btn" onclick="deleteItem('meetings','${item.id}')">✕</button>
+      </div>` : ``}
+    `;
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+function buildRetro(){
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  const items = data.retrospective.filter(i => matchesSearch(i.problem) || matchesSearch(i.solution) || matchesSearch(i.sprint));
+  if(items.length===0){ grid.innerHTML = `<div class="empty">${searchQuery ? "NO MATCHES FOR YOUR SEARCH" : "NO RETRO ITEMS YET" + (isLoggedIn() ? " — add one above." : ". Login to add items.")}</div>`; return grid; }
+  items.forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "card" + (item.done ? " is-done" : "");
+    card.innerHTML = `
+      <div class="card-head"><h3>${escapeHtml((item.problem||"").slice(0,40))}${(item.problem||"").length>40?"…":""}</h3><span class="status-dot ${item.done?"done":""}"></span></div>
+      <div class="phase-block"><span class="phase-tag">PROBLEM</span><span class="phase-text">${escapeHtml(item.problem||"—")}</span></div>
+      <div class="phase-block"><span class="phase-tag p2">SOLUTION</span><span class="phase-text">${escapeHtml(item.solution||"—")}</span></div>
+      <div class="phase-block"><span class="phase-tag p3">TARGET SPRINT</span><span class="phase-text">${escapeHtml(item.sprint||"—")}</span></div>
+      <div class="card-foot" style="margin-top:8px;">
+        <span class="meta">${item.addedBy ? "by " + escapeHtml(item.addedBy) : ""}</span>
+        <span class="status-pill ${item.done?"done":""}">${item.done?"RESOLVED":"OPEN"}</span>
+      </div>
+      ${isLoggedIn() ? `
+      <div class="card-actions">
+        <button class="done-btn ${item.done?"undo":""}" onclick="toggleDone('retrospective','${item.id}')">${item.done ? "↺ REOPEN" : "✓ MARK RESOLVED"}</button>
+        <button class="del-btn" onclick="deleteItem('retrospective','${item.id}')">✕</button>
+      </div>` : ``}
+    `;
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+async function compressImage(file){
+  if(!file.type.startsWith("image/")) throw new Error("Unsupported image");
+  const bitmap = await createImageBitmap(file);
+  const max = 1400;
+  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  return canvas.toDataURL("image/jpeg", 0.76);
+}
+
+function buildTesting(){
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  const items = data.testing.filter(i => matchesSearch(i.title) || matchesSearch(i.desc));
+  if(items.length===0){ grid.innerHTML = `<div class="empty">${searchQuery ? "NO MATCHES FOR YOUR SEARCH" : "NO TESTING ISSUES LOGGED" + (isLoggedIn() ? " — add one above." : ". Login to log one.")}</div>`; return grid; }
+  items.forEach(item=>{
+    const card = document.createElement("div");
+    card.className = "card" + (item.done ? " is-done" : "");
+    card.innerHTML = `
+      ${item.image ? `<img class="card-img" src="${item.image}" alt="issue evidence">` : ``}
+      <div class="card-head"><h3>${escapeHtml(item.title)}</h3><span class="status-dot ${item.done?"done":""}"></span></div>
+      <p>${escapeHtml(item.desc || "No description added.")}</p>
+      <div class="card-foot">
+        <span class="meta">LOGGED ${item.date}${item.addedBy ? " · by " + escapeHtml(item.addedBy) : ""}</span>
+        <span class="status-pill ${item.done?"done":""}">${item.done?"FIXED":"OPEN"}</span>
+      </div>
+      ${isLoggedIn() ? `
+      <div class="card-actions">
+        <button class="done-btn ${item.done?"undo":""}" onclick="toggleDone('testing','${item.id}')">${item.done ? "↺ REOPEN ISSUE" : "✓ MARK FIXED"}</button>
+        <button class="del-btn" onclick="deleteItem('testing','${item.id}')">✕</button>
+      </div>` : ``}
+    `;
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+function buildTeam(){
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+    <div class="project-banner">
+      <div><div class="pl">PROJECT</div><h3>${escapeHtml(data.team.projectName || "No project name set yet")}</h3></div>
+    </div>
+  `;
+  const grid = document.createElement("div");
+  grid.className = "grid";
+  if(data.team.members.length===0){
+    grid.innerHTML = `<div class="empty">NO TEAM MEMBERS YET${isLoggedIn() ? " — add one above." : ". Login to add members."}</div>`;
+  } else {
+    data.team.members.forEach(m=>{
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="member-card">
+          <div class="member-avatar">${escapeHtml((m.name||"?").charAt(0).toUpperCase())}</div>
+          <div class="member-info"><h3>${escapeHtml(m.name)}</h3><p>${escapeHtml(m.role||"No role set")}</p></div>
+        </div>
+        ${isLoggedIn() ? `
+        <div class="card-actions">
+          <button class="del-btn" style="width:100%;" onclick="deleteMember('${m.id}')">✕ REMOVE MEMBER</button>
+        </div>` : ``}
+      `;
+      grid.appendChild(card);
+    });
+  }
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function buildTeamProgress(){
+  const wrap = document.createElement("div");
+  if(data.team.members.length===0){
+    wrap.innerHTML = `<div class="empty">ADD TEAM MEMBERS FIRST — go to the Team board.</div>`;
+    return wrap;
+  }
+  data.team.members.forEach(m=>{
+    const val = data.teamProgressMap[m.id] || 0;
+    const row = document.createElement("div");
+    row.className = "tp-row";
+    row.innerHTML = `
+      <div class="member-avatar">${escapeHtml((m.name||"?").charAt(0).toUpperCase())}</div>
+      <div><div class="tp-name">${escapeHtml(m.name)}</div><div class="tp-role">${escapeHtml(m.role||"")}</div></div>
+      <div class="bar-track" style="height:14px;">
+        <div class="bar-fill" style="width:${val}%"></div>
+      </div>
+      <div class="tp-val">${val}%</div>
+    `;
+    if(isLoggedIn()){
+      const track = row.querySelector(".bar-track");
+      track.style.cursor = "pointer";
+      track.title = "Click to set progress";
+      track.onclick = (e) => {
+        const rect = track.getBoundingClientRect();
+        const pct = Math.max(0, Math.min(100, Math.round(((e.clientX-rect.left)/rect.width)*100)));
+        data.teamProgressMap[m.id] = pct;
+        save();
+        renderSections();
+        renderTop();
+      };
+    }
+    wrap.appendChild(row);
+  });
+  return wrap;
+}
+
+/* ---------- ADD / MODIFY ---------- */
+function addItem(){
+  if(!requireLogin()) return;
+  const kind = boards[activeTab].kind;
+
+  if(kind==="meetings"){
+    const titleInput = document.getElementById("titleInput");
+    const title = titleInput.value.trim();
+    if(!title){ titleInput.focus(); return; }
+    const type = document.getElementById("typeInput").value;
+    const date = document.getElementById("dateInput").value;
+    const time = document.getElementById("timeInput").value;
+    data.meetings.push({ id:Date.now().toString(), title, type, date, time, done:false, addedBy:sessionUser });
+  } else if(kind==="generic"){
+    const titleInput = document.getElementById("titleInput");
+    const title = titleInput.value.trim();
+    if(!title){ titleInput.focus(); return; }
+    const descInput = document.getElementById("descInput");
+    const dueInput = document.getElementById("dueInput");
+    data[activeTab].push({ id:Date.now().toString(), title, desc:descInput.value.trim(), due:dueInput.value, done:false, date:new Date().toLocaleDateString(), addedBy:sessionUser });
+  } else if(kind==="retro"){
+    const problemInput = document.getElementById("problemInput");
+    const problem = problemInput.value.trim();
+    if(!problem){ problemInput.focus(); return; }
+    const solution = document.getElementById("solutionInput").value.trim();
+    const sprint = document.getElementById("sprintInput").value.trim();
+    data.retrospective.push({ id:Date.now().toString(), problem, solution, sprint, done:false, addedBy:sessionUser });
+  } else if(kind==="testing"){
+    const titleInput = document.getElementById("titleInput");
+    const title = titleInput.value.trim();
+    if(!title){ titleInput.focus(); return; }
+    const desc = document.getElementById("descInput").value.trim();
+    const fileInput = document.getElementById("imgInput");
+    const file = fileInput.files[0];
+    const pushIssue = (imageData) => {
+      data.testing.push({ id:Date.now().toString(), title, desc, image:imageData||null, done:false, date:new Date().toLocaleDateString(), addedBy:sessionUser });
+      save(); renderRuler(); renderTop(); renderAddBar(); renderSections();
+    };
+    if(file){
+      compressImage(file).then(pushIssue).catch(() => {
+        alert("Couldn't process that image. Please try a smaller image.");
+      });
+      return;
+    } else { pushIssue(null); }
+    return;
+  } else if(kind==="team"){
+    const nameInput = document.getElementById("memberNameInput");
+    const name = nameInput.value.trim();
+    if(!name){ nameInput.focus(); return; }
+    const role = document.getElementById("memberRoleInput").value.trim();
+    data.team.members.push({ id:Date.now().toString(), name, role });
+  }
+  save();
+  renderRuler(); renderTop(); renderAddBar(); renderSections();
+}
+
+function saveProjectName(){
+  if(!requireLogin()) return;
+  const input = document.getElementById("projectNameInput");
+  data.team.projectName = input.value.trim();
+  save();
+  renderSections();
+}
+
+function toggleDone(key,id){
+  if(!requireLogin()) return;
+  const item = data[key].find(i=>i.id===id);
+  if(item){ item.done = !item.done; save(); renderRuler(); renderTop(); renderSections(); }
+}
+
+function deleteItem(key,id){
+  if(!requireLogin()) return;
+  data[key] = data[key].filter(i=>i.id!==id);
+  save(); renderRuler(); renderTop(); renderSections();
+}
+
+function deleteMember(id){
+  if(!requireLogin()) return;
+  data.team.members = data.team.members.filter(m=>m.id!==id);
+  delete data.teamProgressMap[id];
+  save(); renderRuler(); renderTop(); renderSections();
+}
+
+function formatDate(iso){
+  const d = new Date(iso + "T00:00:00");
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function escapeHtml(str){
+  const div = document.createElement("div");
+  div.textContent = str || "";
+  return div.innerHTML;
+}
+
+function renderAll(){
+  renderAuthArea();
+  renderRuler();
+  renderTop();
+  renderAddBar();
+  renderSections();
+}
+
+document.getElementById("footDate").textContent = new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+
+/* Poll the server periodically so teammates' changes show up without a manual
+   refresh. Skipped while a save is in flight, and skipped while the user is
+   actively typing in the add bar or search box so it doesn't wipe out
+   in-progress input. */
+function isTypingSomewhere(){
+  const el = document.activeElement;
+  if(!el) return false;
+  const tag = el.tagName;
+  return tag==="INPUT" || tag==="TEXTAREA" || tag==="SELECT";
+}
+function startPolling(){
+  setInterval(async () => {
+    if(saving || isTypingSomewhere()) return;
+    try{
+      await fetchData();
+      renderRuler(); renderTop(); renderSections();
+    } catch(err){ /* transient network issue — try again next tick */ }
+  }, 8000);
+}
+
+async function init(){
+  try{
+    await Promise.all([fetchSession(), fetchData()]);
+  } catch(err){
+    document.getElementById("sections").innerHTML =
+      '<div class="empty">Couldn\'t reach the dashboard server. Make sure it\'s running and reload this page.</div>';
+  }
+  renderAll();
+  startPolling();
+}
+init();
+</script>
+</body>
+</html>

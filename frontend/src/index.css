@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+}
+
+/* Thin scrollbar - Webkit */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ff7a29;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #e56a1f;
+}
+
+/* Thin scrollbar - Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #ff7a29 transparent;
+}
+
+/* Smooth fade-in utility for scroll animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
