@@ -98,3 +98,4 @@ git push
 - **Render free tier** spins down after 15 minutes idle — first request after that takes ~30-50s to wake up.
 - Demo login after seeding: `test@example.com` / `password`. Admin: `admin@readonrent.com` / `Admin@12345` (or whatever you set via `ADMIN_EMAIL`/`ADMIN_PASSWORD` before seeding).
 - See `backend/README.md` and `frontend/README.md` for details specific to each half of the project.
+
